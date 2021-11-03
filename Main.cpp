@@ -23,8 +23,6 @@ bool Terminate = false;
 HANDLE handle;
 
 
-HANDLE hProcessThread = 0;
-
 HWND hMainWnd = 0;
 
 static TBuffer Buffer = TBuffer();
@@ -76,20 +74,19 @@ LRESULT CALLBACK GraphWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 			Buffer.IncreaseProcessPercentage();
 
 
-			InvalidateRect(GetDlgItem(hWnd, IDC_GRAPH), NULL, FALSE);
+			InvalidateRect(GetDlgItem(hMainWnd, IDC_GRAPH), NULL, FALSE);
 			
 		}
 		else if (zDelta < 0 && Buffer.GetMaxProc() >= 30) {
 
 			Buffer.DecreaseProcessPercentage();
 
-			InvalidateRect(GetDlgItem(hWnd, IDC_GRAPH), NULL, FALSE);
-		}
-
-		
+			InvalidateRect(GetDlgItem(hMainWnd, IDC_GRAPH), NULL, FALSE);
+		}	
 
 		return 0;
 	}
+	
 	}
 
 	return DefWindowProc(hWnd, Msg, wParam, lParam);
@@ -164,6 +161,7 @@ void HandleTerminate(HWND hWnd) {
 		TerminateProcess(handle, exitCode);
 		DisableEnableControls(hWnd, ProcessState::TERMINATE);
 		CloseHandle(handle);
+		
 	}
 
 }
@@ -255,7 +253,7 @@ BOOL CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 			HandleBrowse(hWnd);
 			return TRUE;
 		case IDC_START:
-			hProcessThread = CreateThread(NULL, 0, ProcessThread, NULL, 0, NULL);
+			CloseHandle(CreateThread(NULL, 0, ProcessThread, NULL, 0, NULL));
 			return TRUE;
 		case IDC_TERMINATE:
 			HandleTerminate(hWnd);
@@ -272,6 +270,11 @@ BOOL CALLBACK MainWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
 		DestroyWindow(hWnd);
 		return TRUE;
 
+	case WM_LBUTTONDOWN:
+
+		SetFocus(GetDlgItem(hWnd, IDC_GRAPH));
+		return TRUE;
+		
 	}
 	return FALSE;
 }

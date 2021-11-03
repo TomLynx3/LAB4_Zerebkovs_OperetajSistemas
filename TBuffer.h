@@ -11,8 +11,7 @@ private:
 	CRITICAL_SECTION cs;
 	int midProc;
 	int maxProc;
-	//CRITICAL_SECTION cs; // kritiska sekcija
-	//...
+
 
 public:
 	TBuffer();
@@ -24,5 +23,4 @@ public:
 	int GetMaxProc();
 	void IncreaseProcessPercentage();
 	void DecreaseProcessPercentage();
-	//...
 };

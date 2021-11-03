@@ -55,7 +55,7 @@ void TBuffer::Draw(HDC dc, RECT rect)
 
 			
 
-			if (index==this->head) {
+			if (t==0) {
 
 				SelectObject(dc, user_pen);
 				MoveToEx(dc, x,y, NULL);
