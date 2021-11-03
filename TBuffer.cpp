@@ -8,6 +8,10 @@ TBuffer::TBuffer()
 
 	this->buf[BUF_SIZE] = {};
 
+	this->midProc = 25;
+
+	this->maxProc = 50;
+
 	InitializeCriticalSection(&this->cs);
 	
 }
@@ -34,28 +38,51 @@ void TBuffer::Draw(HDC dc, RECT rect)
 		int index = this->head;
 		int t = 0;
 
+
+		int xPrev = 0;
+		int yUserPrev = 0;
+		int yKernelPrev = 0;
+
 		while (index != this->head - 1) {
+
 			TBufItem item = this->buf[index];
 
+			int x = t * rect.right / (BUF_SIZE - 1);
 
-			int x = (rect.right / BUF_SIZE - 1) * t;
-			int y = rect.bottom - ((rect.bottom * item.tu) / 100);
+			int y = rect.bottom - ((rect.bottom * item.tu) / this->maxProc);
 
-			int ykernel = rect.bottom - ((rect.bottom * item.tk) / 100);
+			int ykernel = rect.bottom - ((rect.bottom * item.tk) / this->maxProc);
 
-			index = (index + 1) % BUF_SIZE;
+			
 
-			if (t==0) {
-				MoveToEx(dc, x,rect.bottom, NULL);
+			if (index==this->head) {
+
+				SelectObject(dc, user_pen);
+				MoveToEx(dc, x,y, NULL);
+
+				SelectObject(dc, kernel_pen);
+				MoveToEx(dc, x, ykernel, NULL);
+
+				yUserPrev = y;
+				yKernelPrev = ykernel;
+				xPrev = x;
 			}
 			else {
 				SelectObject(dc, user_pen);
+				MoveToEx(dc, xPrev, yUserPrev, NULL);
 				LineTo(dc, x, y);
+
+
 				SelectObject(dc, kernel_pen);
+				MoveToEx(dc, xPrev, yKernelPrev, NULL);
 				LineTo(dc, x, ykernel);
 
-			}
+				yUserPrev = y;
+				yKernelPrev = ykernel;
+				xPrev = x;
 
+			}
+			index = (index + 1) % BUF_SIZE;
 			t++;
 
 		}
@@ -86,5 +113,22 @@ void TBuffer::Clear()
 	memset(this->buf, 0, sizeof(this->buf));
 }
 
+int TBuffer::GetMidProc() {
+	return this->midProc;
+}
 
+int TBuffer::GetMaxProc() {
+	return this->maxProc;
+}
 
+void  TBuffer::IncreaseProcessPercentage() {
+	this->maxProc = this->maxProc + 10;
+
+	this->midProc = this->maxProc / 2;
+}
+
+void TBuffer::DecreaseProcessPercentage() {
+	this->maxProc = this->maxProc - 10;
+
+	this->midProc = this->maxProc / 2;
+}

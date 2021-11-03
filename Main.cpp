@@ -34,20 +34,62 @@ LRESULT CALLBACK GraphWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 	switch (Msg)
 	{
 	case WM_PAINT:
+	{
+		int midProc = Buffer.GetMidProc();
+		int maxProc = Buffer.GetMaxProc();
+		char midProcStr[5];
+		char maxProcStr[5];
+
+		sprintf(midProcStr, "%.2d%%",
+			midProc);
+
+		sprintf(maxProcStr, "%.2d%%",
+			maxProc);
+
+		SetDlgItemText(hMainWnd, IDC_MID, midProcStr);
+		SetDlgItemText(hMainWnd, IDC_MAX, maxProcStr);
+
+
 		PAINTSTRUCT ps;
 		HDC dc = BeginPaint(hWnd, &ps);
-		RECT rect; 
+		RECT rect;
 
-		GetClientRect(hWnd, &rect); 
-		
+		GetClientRect(hWnd, &rect);
+
 
 		Buffer.Draw(dc, rect);
 
-		
+
 		EndPaint(hWnd, &ps);;
-		
+
 		ReleaseDC(hWnd, dc);
 		return 0;
+
+	}
+	case WM_MOUSEWHEEL:
+	{
+		
+		short zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+		if (zDelta > 0 && Buffer.GetMaxProc()<=90) {
+
+			Buffer.IncreaseProcessPercentage();
+
+
+			InvalidateRect(GetDlgItem(hWnd, IDC_GRAPH), NULL, FALSE);
+			
+		}
+		else if (zDelta < 0 && Buffer.GetMaxProc() >= 30) {
+
+			Buffer.DecreaseProcessPercentage();
+
+			InvalidateRect(GetDlgItem(hWnd, IDC_GRAPH), NULL, FALSE);
+		}
+
+		
+
+		return 0;
+	}
 	}
 
 	return DefWindowProc(hWnd, Msg, wParam, lParam);
@@ -63,7 +105,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 	wc.lpszClassName = "GRAPH";
 	RegisterClass(&wc);
 	
-	DialogBox(hInstance, MAKEINTRESOURCE(IDD_MAINDIALOG), NULL, MainWndProc);
+	DialogBox(hInstance, MAKEINTRESOURCE(IDD_MAINDIALOG), NULL, (DLGPROC)MainWndProc);
 	return 0; 
 }
 
@@ -118,6 +160,7 @@ void DisableEnableControls(HWND hWnd, ProcessState state) {
 void HandleTerminate(HWND hWnd) {
 	DWORD exitCode = 0;
 	if (handle != 0) {
+		Terminate = true;
 		TerminateProcess(handle, exitCode);
 		DisableEnableControls(hWnd, ProcessState::TERMINATE);
 		CloseHandle(handle);
